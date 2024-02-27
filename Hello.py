@@ -13,39 +13,40 @@
 # limitations under the License.
 
 import streamlit as st
-from streamlit.logger import get_logger
+import pandas as pd
+import plotly.express as px
 
-LOGGER = get_logger(__name__)
-
+# Assuming this is a typo and meant to use @st.cache
+@st.cache_data
+def load_data():
+    df = pd.read_csv("./main_data.csv")
+    df["product_id"] = df["product_id"].str[:5]
+    return df
 
 def run():
     st.set_page_config(
-        page_title="Hello",
-        page_icon="👋",
+        page_title="Dashboard",
+        page_icon="📈",
     )
 
-    st.write("# Welcome to Streamlit! 👋")
+    st.write("# Welcome to the Dashboard! 📊")
+    st.caption("Hover on each bar to find more information!")
 
-    st.sidebar.success("Select a demo above.")
+    df = load_data()
 
-    st.markdown(
-        """
-        Streamlit is an open-source app framework built specifically for
-        Machine Learning and Data Science projects.
-        **👈 Select a demo from the sidebar** to see some examples
-        of what Streamlit can do!
-        ### Want to learn more?
-        - Check out [streamlit.io](https://streamlit.io)
-        - Jump into our [documentation](https://docs.streamlit.io)
-        - Ask a question in our [community
-          forums](https://discuss.streamlit.io)
-        ### See more complex demos
-        - Use a neural net to [analyze the Udacity Self-driving Car Image
-          Dataset](https://github.com/streamlit/demo-self-driving)
-        - Explore a [New York City rideshare dataset](https://github.com/streamlit/demo-uber-nyc-pickups)
-    """
-    )
+    n = st.sidebar.number_input('Enter the number of top products:', min_value=1, value=5)  # Default to 5
 
+    # Ambil top n produk
+    top_n_products = df.nlargest(n, 'total_quantity_sold')
+
+    # Plot
+    fig = px.bar(top_n_products, x='product_id', y='total_quantity_sold',
+                 hover_data=['price', 'product_category_name_english', 'product_description_lenght', 'product_photos_qty'],  # Fixed typo in 'product_description_length'
+                 labels={'total_quantity_sold': 'Total Quantity Sold', 'product_id': 'Product ID'},
+                 title=f'Top {n} Products by Total Quantity Sold')
+
+    # Tampilkan plot
+    st.plotly_chart(fig)
 
 if __name__ == "__main__":
     run()
